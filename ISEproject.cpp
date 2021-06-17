@@ -637,7 +637,6 @@ void Bill::SaveBillInFile(ofstream & OutputBill)
                                       // Shows the Customer Bill
 void Bill::ShowBill()
 {
-	cout << "\n\t\t ==============CUSTOMER'S BILL=============" << endl;
 
 	cout << " Cost of Electricity : " << ElectricityCost << endl << endl;
 	cout << "Tax  percentage :" << SalesTax << endl << endl;
@@ -737,10 +736,7 @@ public:
 	void ViewBill();
 	void  UpdateInfo();
 	bool CheckId(int );
-
-
-
-
+	~Costumer();
 };
 
 
@@ -897,8 +893,8 @@ void Costumer::SaveData(ofstream& outputCostumer)
                                        // This will enable the user to see his Current bill
 void Costumer::ViewBill()
 {
-	CurrentBill[NoofBill - 1]->ShowBill();
-
+	system("cls");
+	cout << "\n\t\t ==============CUSTOMER'S BILL=============" << endl<<endl;
 	cout << "Cotumer Id: " << CostumerId << endl << endl;
 	cout << "Costumer UserName: " << UserName << endl << endl;
 	cout << "Adress :" << Address << endl << endl;
@@ -911,6 +907,7 @@ void Costumer::ViewBill()
 		cout << "Meter Type:	Single Phase Meter" << endl << endl;
 	else
 		cout << "MeterType:	3Phase Phase Meter" << endl << endl;
+	CurrentBill[NoofBill - 1]->ShowBill();
 	return;
 }
                                        // check validity of Customer(id , date ,meter type ) by comparing from File Data
@@ -1013,18 +1010,18 @@ void Costumer::UpdateInfo()
 			cin >> PeakHourUnits;
 		}
 	}
-}
-               
-                                            // For crosschecking the ID and Date of Birth of the customer
+}           
+		                                         // For crosschecking the ID and Date of Birth of the customer
 bool Costumer::CheckCredentials(int id, string dob)
 {
 	return (id == CostumerId && dob == DateOfBirth);
 }
+												//associate bills with costumers
 void Costumer::SetBill(Bill* newBill)
 {
 	if (CurrentBill == 0)
 	{
-		CurrentBill = new Bill*[10];
+		CurrentBill = new Bill*[30];
 	}
 	CurrentBill[NoofBill] = newBill;
 	CurrentBill[NoofBill + 1] = 0;
@@ -1036,7 +1033,17 @@ bool Costumer:: CheckId(int id)
 	return (CostumerId==id);
 }
 
-
+Costumer ::~Costumer()
+{
+	if(CurrentBill)
+	{
+		for(int i=0;i<30;i++)
+		{
+			delete[] CurrentBill;
+		}
+		delete CurrentBill;
+	}
+}
 
 
 //     ============================================  LESCO ============================================
@@ -1072,7 +1079,7 @@ public:
 	void ShowCalculatedBill();
 
 	Costumer* SearchCostumerById(int);
-	bool UserExist(int id, string Date, int, int);
+	bool UserExist(int id, string Date, int, int,int, int);
 	void AssociateCostumerToBill();
 	void AssociateBill();
 	void GenerateBill();
@@ -1082,6 +1089,7 @@ public:
 	bool Changepassword();
 	void Showbill();
 	void ShowReport();
+	~LESCO();
 };
 
 LESCO::LESCO()
@@ -1103,7 +1111,7 @@ void LESCO::LoadDataFromFileCostumers()
 	if (InputCostumers)
 	{
 		InputCostumers >> TotalCostumers;
-		costumerList = new Costumer*[10];
+		costumerList = new Costumer*[100];
 		for (int i = 0; i < TotalCostumers;i++)
 		{
 			costumerList[i] = new Costumer;
@@ -1143,7 +1151,7 @@ void LESCO::LoadDataFromFileBills()
 	if (inputBills)
 	{
 		inputBills >> TotalBills;
-		BillingList = new Bill*[10];
+		BillingList = new Bill*[100];
 		for (int i = 0;i < TotalBills;i++)
 		{
 			BillingList[i] = new Bill;
@@ -1152,6 +1160,7 @@ void LESCO::LoadDataFromFileBills()
 		inputBills.close();
 	}
 }
+											//  Loading the file "TarrifAndTax.txt"
 void  LESCO::LoadDataFromTarrifFile()
 {
 	File.LoadTarrifFile();
@@ -1161,7 +1170,7 @@ void LESCO::RegisterUsers()
 {
 	if (costumerList == 0)
 	{
-		costumerList = new Costumer*[10];
+		costumerList = new Costumer*[100];
 	}
 	costumerList[TotalCostumers] = new Costumer;
 
@@ -1337,6 +1346,7 @@ void LESCO::Add_or_Update_Entry()
 		SaveDataAfterRegisterationCostumer();
 		cout<<"The information is Updated Successfully "<<endl;
 	}
+	delete temp;
 }
                                           
 void LESCO::GenerateBill()
@@ -1352,7 +1362,7 @@ void LESCO::GenerateBill()
 		{
 			if (BillingList == 0)
 			{
-				BillingList = new Bill*[10];
+				BillingList = new Bill*[100];
 			}
 			BillingList[TotalBills] = new Bill;
 			BillingList[TotalBills + 1] = 0;
@@ -1372,9 +1382,17 @@ void LESCO::UpdateStatus_of_Bill()
 	int Id;
 	cout << "Enter Customer Id of whom you want to change paid Status " << endl;
 	cin >> Id;
+	int tempMonth=1;
+		for (int i = 0; i < TotalBills; i++)
+		{
+			if(BillingList[i]->GetMonth()>tempMonth)
+			{
+				tempMonth=BillingList[i]->GetMonth();
+			}
+		}
 	for (int i = 0; i < TotalBills; i++)
 	{
-		if (Id == BillingList[i]->GetId())
+		if (Id == BillingList[i]->GetId()&&tempMonth==BillingList[i]->GetMonth())
 		{
 			BillingList[i]->ChangeBillStatus();
 			break;
@@ -1411,7 +1429,9 @@ void LESCO::UpdateStatus_of_Bill()
 			break;
 		}
 	}
+	cout<<"Bill Status Updated Successfully!"<<endl<<endl;
 	SaveDataAfterRegisterationCostumer();//to store changes after updation...same function call
+	SaveDataAfterGenerationOfBill();
 }
                                            // Set the current Employee ( Logged in) 
 bool LESCO::SetCurrentEmployee()
@@ -1501,13 +1521,27 @@ bool LESCO::Changepassword()
 	}
 
 }
-bool LESCO::UserExist(int id, string Date, int meterType, int CostumType)
+bool LESCO::UserExist(int id, string Date, int meterType, int CostumType, int meterReading,int peakReading)
 {
 	for (int i = 0;i < TotalCostumers;i++)
 	{
 		if (costumerList[i]->UserExist(id, Date, meterType, CostumType))
 		{
-			return 1;
+			if(costumerList[i]->GetRegUnits()<=meterReading)
+			{
+				if(costumerList[i]->GetPeakHourUnits()<=peakReading)
+						return 1;
+				else
+				{
+					cerr<<"Meter Reading Peak Cannot be Greater than Previous Meter Reading.... Thank you!"<<endl;
+					return 0;
+				}
+			}
+			else
+			{
+				cerr<<"Meter Reading Regular Cannot be Greater than Previous Meter Reading.... Thank you!"<<endl;
+				return 0;
+			}
 		}
 	}
 	return 0;
@@ -1581,7 +1615,7 @@ void  LESCO::ShowCalculatedBill()
 		else
 			peakreading = 0;
 
-		if (UserExist(id, Date, meterType, costumType))
+		if (UserExist(id, Date, meterType, costumType,CurrentMeterReading,peakreading))
 		{
 			Bill *TempBill = new Bill;
 			TotalBill = TempBill->CalculationOfBill(temp->GetRegUnits(), CurrentMeterReading, temp->GetPeakHourUnits(), peakreading, meterType, costumType);
@@ -1589,8 +1623,9 @@ void  LESCO::ShowCalculatedBill()
 			delete TempBill;
 		}
 	}
+	delete temp;
 }
-
+										//show amount of paid and unpaid bills
 void LESCO::ShowReport()
 {
 	if (CurrentEmployee == 0)
@@ -1600,25 +1635,64 @@ void LESCO::ShowReport()
 	}
 	else
 	{
+		int tempMonth=1;
+		for (int i = 0; i < TotalBills; i++)
+		{
+			if(BillingList[i]->GetMonth()>tempMonth)
+			{
+				tempMonth=BillingList[i]->GetMonth();
+			}
+		}
 		int paid_count = 0, unpaid_count = 0;
 		for (int i = 0; i < TotalBills; i++)
 		{
-			if (BillingList[i]->GetBillStatus() == 1)
+			if (BillingList[i]->GetBillStatus() == 1&& tempMonth==BillingList[i]->GetMonth())
 				paid_count++;
 			else
+				if(tempMonth==BillingList[i]->GetMonth())
 				unpaid_count++;
 		}
-		cout << endl << "Paid Bills : " << paid_count << endl;
-		cout << "Unpaid Bills : " << unpaid_count << endl;
+		cout << endl << "Paid Bills :	 " << paid_count << endl<<endl;
+		cout << "Unpaid Bills :		" << unpaid_count << endl<<endl<<endl;
 	}
 
 }
 
 
+LESCO::~LESCO()
+{
+	if(costumerList)
+	{
+		for(int i=0;i<100;i++)
+		{
+			delete[] costumerList;
+		}
+		delete costumerList;
+	}
 
+	if( EmployeeList)
+	{
+		for(int i=0;i<10;i++)
+		{
+			delete[] EmployeeList;
+		}
+		delete EmployeeList;
+	}
 
+	if(BillingList)
+	{
+		for(int i=0;i<100;i++)
+		{
+			delete[] BillingList;
+		}
+		delete BillingList;
+	}
 
-
+	if( CurrentCostumer)
+		delete CurrentCostumer;
+	if(CurrentEmployee)
+		delete CurrentEmployee;
+}
 
 
 
