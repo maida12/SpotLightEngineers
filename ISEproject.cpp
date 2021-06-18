@@ -1020,7 +1020,7 @@ bool Costumer:: CheckId(int id)
 
 Costumer ::~Costumer()
 {
-	cout<<"~Costumer() called "<<UserName<<endl;
+	
 }
 
 
