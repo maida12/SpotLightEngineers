@@ -1601,6 +1601,7 @@ void LESCO::ShowReport()
 	}
 	else
 	{
+		cout<<"The amount Of Bills Paid and Unpaid in Current Month "<<endl;
 		string tempMonth="";
 		for (int i = 0; i < TotalBills; i++)
 		{
